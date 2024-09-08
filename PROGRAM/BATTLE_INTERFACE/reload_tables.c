@@ -101,7 +101,7 @@ bool GetNextLocationForPath(string outLocName, string goLocName, ref nextLocName
 
 		if( goLocName == tbl.(goLocName).(outLocName) ) {break;}
 
-		goLocName = tbl.(goLocName).(outLocName)
+		goLocName = tbl.(goLocName).(outLocName);
 	}
 
 	if(nextLocName=="" || nextLocName==finalLocation) return true;

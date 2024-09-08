@@ -186,7 +186,7 @@ float ProcessHullRepair(ref chref,float repPercent)
 	if (AUTO_SKILL_SYSTEM) 
 	{
 		int AddSkill = makeint(repPercent + 0.5);  if (AddSkill < 20) AddSkill = 20;
-		AddPartyExpChar(chref, "Repair", AddSkill));
+		AddPartyExpChar(chref, "Repair", AddSkill);
 		AddPartyExpChar(chref, "Defence", AddSkill);
 	}
 

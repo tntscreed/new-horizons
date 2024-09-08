@@ -157,7 +157,7 @@ void WM_SetParameterData()
 	BattleInterface.CommandTextures.list.t1.ysize = 1;
 
 	BattleInterface.wm_sign.fontid					= "interface_normal";
-	BattleInterface.wm_sign.fontcolor				= argb(255,255,255,168) //argb(255,255,255,255);
+	BattleInterface.wm_sign.fontcolor				= argb(255,255,255,168); //argb(255,255,255,255);
 	BattleInterface.wm_sign.fontscale				= 1.1 * fHtRatio;
 	fTmp = makeint(-14.0 * fHtRatio);
 	fTmp2 = makeint(18.0 * fHtRatio);

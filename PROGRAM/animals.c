@@ -258,9 +258,9 @@ void CreateAnimals(ref Location)
 
 	//changed by MAXIMUS, completed by JRH -->
 	bool bAdd = false;
-	if(CheckAttribute(LOCATION, "boarding") && LOCATION.boarding=="true")) bAdd = true;
+	if(CheckAttribute(LOCATION, "boarding") && LOCATION.boarding=="true") bAdd = true;
 	if(CheckAttribute(LOCATION, "fastreload") && LOCATION.fastreload=="ship") bAdd = true;
-	if(CheckAttribute(LOCATION, "rats") && LOCATION.rats=="true")) bAdd = true;	//JRH
+	if(CheckAttribute(LOCATION, "rats") && LOCATION.rats=="true") bAdd = true;	//JRH
 	if(bAdd && CheckAttribute(LOCATION, "models.always.l1"))
 	{
 		string LOCATIONName = LOCATION.models.always.l1;
