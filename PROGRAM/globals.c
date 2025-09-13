@@ -21,6 +21,18 @@ float FRAND(float _x) { return rand(32768) / 32768.0 * _x; }
 #define false			0
 #define true			1
 
+// Mirsaneli add
+int TimeScaleCounter = 0;
+float frandSmall(float _x) { return rand(32) / 32.0 * _x; } // boal
+
+ref pchar;
+
+int MaxVertices = 32000;//32000;//16000;//8000;//4000
+int MaxIndices = 33200;//33200;//17200;//9200;//5200
+float GridStepX = 0.1;
+float GridStepPC = 0.1;
+float MaxWaveDistance = 4000.0;//4000.0;//3000.0;//2000.0;//1000.0
+float LodScale = 0.7;//0.7;//1.2;//2.0;//4.0
 
 //--------------------------------------------------------------------
 // Nation section

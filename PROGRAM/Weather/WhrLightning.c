@@ -8,8 +8,8 @@ float fLightningScaleX,	fLightningScaleY;
 
 void WhrDeleteLightningEnvironment()
 {
-	if (isEntity(&Lightning)) 
-	{ 
+	if (isEntity(&Lightning))
+	{
 		DeleteClass(&Lightning);
 		DeleteAttribute(&Lightning,"");
 	}
@@ -22,18 +22,17 @@ void WhrCreateLightningEnvironment()
 {
 	aref aCurWeather = GetCurrentWeather();
 	aref aLightning; 	makearef(aLightning,aCurWeather.Lightning);
-	
+
 	DeleteAttribute(&Lightning,"");
 	Lightning.Clear = "";
 	DelEventHandler(WHR_LIGHTNING_DOIT,"Lightning_DoIt");
 
 	if (sti(aLightning.Enable) != true) return;
 
-	if (!isEntity(&Lightning)) 
-	{ 
+	if (!isEntity(&Lightning))
+	{
 		CreateEntity(&Lightning,"Lightning");
 	}
-
 	LayerAddObject(SEA_REFLECTION, &Lightning, 10);
 
 	SetEventHandler(WHR_LIGHTNING_SOUND,"Lightning_Sound",0);
@@ -65,54 +64,76 @@ void Lightning_DoIt()
 {
 	if (!isEntity(&Lightning)) { return; }
 
-	// next lightning
-	PostEvent(WHR_LIGHTNING_DOIT, 200 + rand(1200));
-	
-	// if interface launched, return
-	if (sti(InterfaceStates.Launched)) { return; }
+	// Set next lightning
+	int delayTime;
+	if (Whr_IsDay()) {
+		delayTime = 5000 + rand(3000); // 5–8 sec during day
+	} else {
+		delayTime = 3000 + rand(3000); // 3–6 sec during night
+	}
+	PostEvent(WHR_LIGHTNING_DOIT, delayTime);
+
+	// Don't flash while in interface
+	if (sti(InterfaceStates.Launched) && CurrentInterface != INTERFACE_MAINMENU) { return; }
 
 	aref aCurWeather = GetCurrentWeather();
-
-	int iTimeLightning = 1000;
 
 	float cx = stf(Camera.Pos.x);
 	float cy = stf(Camera.Pos.y);
 	float cz = stf(Camera.Pos.z);
 
-	float fDist = 1000.0 + frnd() * 2000.0;
-	if (rand(30) == 15) { fDist = 20.0 + frnd() * 200.0; }	// nearest lightning
-	float fAngle = frnd() * PIm2;
-	int iTimeSound = fDist / 333.0;
+	// Determine distance and direction for lightning
+	float fDist = 1000.0 + frnd() * 2000.0; // mostly distant
+	if (rand(20) == 0) { fDist = 50.0 + frnd() * 200.0; } // sometimes closer
 
-	float fTime = frnd() * 0.1 + 0.1;
+	float fAngle = frnd() * PIm2;
+	int iTimeSound = fDist / 333.0; // delay for sound based on distance
+
+	float fTime = frnd() * 0.1 + 0.1; // flash duration
 	float x = cx + fDist * sin(fAngle);
 	float y = 590.0;
 	float z = cz + fDist * cos(fAngle);
 
 	int iFlickerTime = Whr_GetLong(aCurWeather, "Lightning.FlickerTime");
-
 	int iSubTexture = rand(sti(Lightning.SubTexX) * sti(Lightning.SubTexY) - 1);
 
-	float fFlashSize = 1500.0;
+	// Flash properties
+	float fFlashSize;
+	if (Whr_IsDay())
+	{
+		fFlashSize = 1200.0;
+	}
+	else
+	{
+		fFlashSize = 2000.0;
+	}
 	float fLightningSize = 600.0;
 	float fScaleX = fLightningScaleX;
 	float fScaleY = fLightningScaleY;
-	
+
 	if (fDist < 1000.0)
 	{
-		fLightningSize = 600.0 * fDist / 1000.0;
-		if (fLightningSize < 25) { fLightningSize = 25.0; }
-		y = fLightningSize - 10.0 * fDist / 1000.0;
-		//fScaleY = fScaleY * 600.0 / fLightningSize;
+		fLightningSize = 600.0 * (fDist / 1000.0);
+		if (fLightningSize < 25.0) { fLightningSize = 25.0; }
+		y = fLightningSize - 10.0 * (fDist / 1000.0);
 	}
-	
+
+	// Always flash
 	SendMessage(&Lightning, "llsflffffffsff", MSG_WHR_LIGHTNING_ADD, iSubTexture, "lightning", fTime, iFlickerTime, fLightningSize, fScaleX, fScaleY, x, y, z, "flash_lightning", fFlashSize, fTime / 2.0);
 
+	// Decide whether to play thunder sound
 	bool bSound = false;
-	if (fDist < 120.0)	{ bSound = true; }
-	if (rand(3) == 1)	{ bSound = true; }
+	if (fDist < 500.0) {
+		bSound = true; // near lightning = always thunder
+	}
+	else {
+		if (rand(2) == 0) { bSound = true; } // 50% chance for distant flashes
+	}
 
-	if (bSound) { PostEvent(WHR_LIGHTNING_SOUND, iTimeSound, "fff", x, y, z); }
+	// Schedule the sound after delay
+	if (bSound) {
+		PostEvent(WHR_LIGHTNING_SOUND, iTimeSound, "fff", x, y, z);
+	}
 
 	Event(WHR_LIGHTNING, "fff", x, y, z);
 }
@@ -121,7 +142,6 @@ void Lightning_Sound()
 {
 	float x = GetEventData();
 	float y = GetEventData();
-	float z = GetEventData(	);
-
+	float z = GetEventData();
 	Play3DSound("thunder", x, y, z);
 }

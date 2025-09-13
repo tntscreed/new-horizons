@@ -4429,41 +4429,54 @@ void Ship_UpdateParameters()
 	float fSailState = GetEventData();
 	if(!CheckAttribute(rCharacter,"LastSailState")) rCharacter.LastSailState = makeint(fSailState * 2); // NK, Amokachi
 
-	// PB: Steam Ships -->
+	// PB: Steam Ships -->			25.4.2025. Mirsaneli (rewritten some code to make it work with Maelstrom)
 	if(SteamShip(rCharacter))
 	{
 		if(!IsMainCharacter(rCharacter))
 		{
 			switch(sti(fSailState * 2))
 			{
-				case 0:
-					rCharacter.Ship.Power = 0;
-				break;
-				case 1:
-					rCharacter.Ship.Power = 50;
-				break;
-				case 2:
-					rCharacter.Ship.Power = 100;
-				break;
+				case 0: rCharacter.Ship.Power = 0; break;
+				case 1: rCharacter.Ship.Power = 50; break;
+				case 2: rCharacter.Ship.Power = 100; break;
 			}
 		}
+
 		if(GetCargoGoods(rCharacter, GOOD_PLANKS) > 0 || !IsMainCharacter(rCharacter))
 		{
 			ref MyShipType = GetShipByType(GetCharacterShipType(rCharacter));
 			aref arship; makearef(arship, rCharacter.ship);
-			float PowerScalar = stf(GetAttribute(rCharacter,"Ship.Power"))/100;
-			float SpeedRateScalar = stf(GetLocalShipAttrib(arship, MyShipType, "SpeedRate"))/10
-			float DamageScalar = makefloat(GetCurrentShipHP(rCharacter)) / makefloat(GetCharacterShipHP(rCharacter));
-			float SailCompensation = 1.0;
-			if(sti(rCharacter.LastSailState) == 0)	SailCompensation = 0.5;
-			rCharacter.Ship.Impulse.Rotate.z = 0.2 * PowerScalar * SpeedRateScalar * DamageScalar * SailCompensation;
 
-			fX = 0; fY = 0; fZ = 0;
+			float PowerScalar = stf(rCharacter.Ship.Power) / 100;
+			float SpeedRateScalar = stf(GetLocalShipAttrib(arship, MyShipType, "SpeedRate")) / 10;
+			float DamageScalar = makefloat(GetCurrentShipHP(rCharacter)) / makefloat(GetCharacterShipHP(rCharacter));
+			float SailCompensation;
+			if (sti(rCharacter.LastSailState) == 0)
+			{
+				SailCompensation = 0.5;
+			}
+			else
+			{
+				SailCompensation = 1.0;
+			}
+
+			// Final power factor adjustment - Tweak this to match Maelstrom requirements
+			float EngineForce = 10.0; // Try raising this value if the ship still doesn't move
+
+			// MAIN FIX: Use Speed.z instead of Rotate.z
+			rCharacter.Ship.Impulse.Speed.z = EngineForce * PowerScalar * SpeedRateScalar * DamageScalar * SailCompensation;
+			// LogIt("Player Speed.z = " + rCharacter.Ship.Speed.z + " | Impulse = " + rCharacter.Ship.Impulse.Speed.z);
+
+			// Optional: also allow some rotation assist
+			rCharacter.Ship.Impulse.Rotate.z = 0.7 * PowerScalar;
+
+			// Particle system
+			fX = 0, fY = 0, fZ = 0;
 			if(CheckAttribute(rCharacter,"Ship.pos.x")) fX=stf(rCharacter.Ship.pos.x);
 			if(CheckAttribute(rCharacter,"Ship.pos.y")) fY=stf(rCharacter.Ship.pos.y);
 			if(CheckAttribute(rCharacter,"Ship.pos.z")) fZ=stf(rCharacter.Ship.pos.z);
-
-			if(fX != 0 && fY != 0 && fZ != 0)	StackSteam(rCharacter, makeint(abs(stf(GetAttribute(rCharacter,"Ship.Power")))/7.5));
+			if(fX != 0 && fY != 0 && fZ != 0)
+				StackSteam(rCharacter, makeint(abs(stf(rCharacter.Ship.Power)) / 7.5));
 		}
 	}
 	// PB: Steam Ships <--

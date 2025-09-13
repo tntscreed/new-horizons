@@ -144,7 +144,10 @@ bool LoadLocation(ref loc)
 			//Sea
 			if (loc.environment.sea == "true") {
 				CreateSea(EXECUTE,REALIZE);//CreateEntity(&locSea, "sea");
-				CreateCoastFoamEnvironment(loc.id, EXECUTE, REALIZE);
+				if (!CheckAttribute(loc, "notCrateFoam"))
+                {
+					CreateCoastFoamEnvironment(loc.id, EXECUTE, REALIZE);
+				}
 			} else {
 				if (!ownDeckStarted()) DeleteSeaEnvironment();
 			}
@@ -174,7 +177,11 @@ bool LoadLocation(ref loc)
 				//Sea
 				if(loc.environment.sea == "true") {
 					CreateSea(EXECUTE,REALIZE);//CreateEntity(&locSea, "sea");
+					if (!CheckAttribute(loc, "notCrateFoam"))
+                    {														 
 					CreateCoastFoamEnvironment(loc.id, EXECUTE, REALIZE);
+					}
+					
 				}
 				//Weather
 				if(loc.environment.weather == "true") CreateWeather(EXECUTE,REALIZE);//CreateEntity(&locWeather, "weather");
@@ -400,6 +407,26 @@ bool LoadLocation(ref loc)
 
 	//Locators=============================================================================
 	Sea.MaxSeaHeight = 1.15;
+	bool dropSea = false;
+	//#20190613-01
+	if(dropSea) 
+	{
+      	// Mirsaneli (bumpscale fix for some shores)
+			Sea.MaxSeaHeight = 1.4;
+			Sea.Sea2.Bumpscale = 0.03;
+			Sea.Sea2.Transparency = 0.5;
+            Sea.Sea2.LodScale = 1.0; //0.22;
+            Sea.Sea2.GridStep = 0.0375; //0.07
+            Sea.Sea2.PosShift = 0.005;
+			
+        if(CheckAttribute(loc, "MaxWaveHeigh"))
+        {
+            if(stf(loc.MaxWaveHeigh) > 0.0)
+            {
+                Sea.MaxSeaHeight = stf(loc.MaxWaveHeigh);
+            }
+        }
+    }
 	if(CheckAttribute(loc,"MaxSeaHeight")) Sea.MaxSeaHeight = stf(loc.MaxSeaHeight); // screwface : limit wave height
 	//Locator's radiuses
 	int j, k, gnum, lnum;
@@ -676,6 +703,44 @@ bool LoadLocation(ref loc)
 	}
 	LAI_group_SetRelationWithAllStock(LAI_GROUP_CORPSES, LAI_GROUP_NEUTRAL);//MAXIMUS: so we do it once
 	//PostEvent("UpdateLocator", 0, "iiss", loc, mainCharacter, mainCharacter.location.group, mainCharacter.location.locator);//MAXIMUS: labels will always be shown
+	///#20180102-01 Port/Shore sea change		Mirsaneli added different parameters for storms
+	if (CheckAttribute(loc, "type")) {
+		Sea.Sea2.Bumpscale = 0.03; // Always apply this value
+
+		if (bWeatherIsStorm) {
+        // Apply stormy sea parameters
+		Sea.MaxSeaHeight = 2.0;
+        Sea.Sea2.Transparency = 0;
+		//Sea.Sea2.LodScale = 1.0; //0.22;
+        //Sea.Sea2.GridStep = 0.0375; //0.07
+        Sea.Sea2.PosShift = 1.1;
+        Sea.Sea2.Amp1 = 12.0; //1.0
+        Sea.Sea2.Scale1 = 1.0; //2.0
+        Sea.Sea2.Amp2 = 1.5;
+        Sea.Sea2.Scale2 = 5.0; //11.0
+        Sea.Sea2.AnimSpeed1 = 2.0;
+        Sea.Sea2.MoveSpeed1 = "1.0, 0.0, 7.0";
+        Sea.Sea2.AnimSpeed2 = 9.0;
+        Sea.Sea2.MoveSpeed2 = "0.0, 0.0, 1.5";
+		} else {
+        // Apply calm port/shore parameters
+		Sea.MaxSeaHeight = 1.2;
+		Sea.Sea2.Transparency = 0.2;
+        //Sea.Sea2.LodScale = 1.0; //0.22;
+        //Sea.Sea2.GridStep = 0.0375; //0.07
+        Sea.Sea2.PosShift = 0.005;
+        Sea.Sea2.Amp1 = 1.5; //1.0
+        Sea.Sea2.Scale1 = 2.50; //2.0
+        Sea.Sea2.Amp2 = 0.02;
+        Sea.Sea2.Scale2 = 7.0; //11.0
+        Sea.Sea2.AnimSpeed1 = 0.003;
+        Sea.Sea2.MoveSpeed1 = "0.6, 0.0, 0.003";
+        Sea.Sea2.AnimSpeed2 = 0.002;
+        Sea.Sea2.MoveSpeed2 = "0.7, 0.0, 0.003";
+		}
+
+		Sea.isDone = "";
+	}
 	if(CheckAttribute(mainCharacter,"autoreload") && CheckAttribute(mainCharacter,"location.locator.emerge"))
 	{
 		mainCharacter.location.locator.old.emerge = mainCharacter.location.locator.emerge;
@@ -1166,11 +1231,11 @@ void LocLoadShips(ref Location)
 		}
 // <-- KK
 
-		// ASVS -->
+		// ASVS -->		Mirsaneli: 27.11.2024.
 		if(CheckAttribute(rCharacter,"sailaway"))
 		{
 			if(!CheckAttribute(rCharacter,"Ship.Strand"))					rCharacter.Ship.Strand = false;
-			if(!CheckAttribute(Scene,"camera"))								Scene.Camera = SHIP_CAMERA;
+			if(!CheckAttribute(SeaCameras,"camera"))						SeaCameras.Camera = "SeaShipCamera";
 			if(!CheckAttribute(rCharacter,"ship.cannons.Charge"))			rCharacter.ship.cannons.Charge.Type = GOOD_BALLS;
 			if(!CheckAttribute(rCharacter,"TmpPerks.LongRangeShoot"))		rCharacter.TmpPerks.LongRangeShoot = false;
 			if(!CheckAttribute(rCharacter,"TmpPerks.shipspeedup"))			rCharacter.TmpPerks.shipspeedup = false;
@@ -1179,14 +1244,33 @@ void LocLoadShips(ref Location)
 			if(!CheckAttribute(rCharacter,"TmpPerks.stormprofessional"))	rCharacter.TmpPerks.stormprofessional = false;
 			if(!CheckAttribute(rCharacter,"TmpPerks.turn"))					rCharacter.TmpPerks.turn = false;
 			rCharacter.Ship.stopped = false;
-			rCharacter.Ship.Speed.z = 1.5;
-		}
-		else
-		{
+			rCharacter.Ship.Speed.z = 0.62;	// ship move speed
+			}
+			else
+			{
+				if (iShipsType[n] == 0 || iShipsType[n] == 2) // Jetty ships are always moored
+			{
 			rCharacter.Ship.stopped = true;
 			rCharacter.Ship.Speed.z = 0.0;
+			}
+			else
+			{
+			// Randomly determine whether this ship will sail
+			if (rand(100) < 25) // 25% chance to sail for non-jetty ships
+			{
+			if(!CheckAttribute(rCharacter,"TmpPerks.stormprofessional"))	rCharacter.TmpPerks.stormprofessional = false;
+				rCharacter.Ship.stopped = false;
+				rCharacter.Ship.Speed.z = 0.62;
+			}
+			else
+				{
+				rCharacter.Ship.stopped = true;
+				rCharacter.Ship.Speed.z = 0.0;
+				}
+			}
 		}
 		// ASVS <--
+		
 		Ship_SetLightsAndFlares(rCharacter);
 		Ship_PrepareShipForLocation(rCharacter);
 		// Screwface : section to send to setshipflag function the real number of ships who are physically in port and avoid CTD in some ports
@@ -1296,4 +1380,55 @@ void LocationTimeUpdateFunc()
 	}
 	// 04-09-21 unclamp time - if(locTmpTime > 100000.0) locTmpTime = 100000.0;
 	// NK <--
+}
+
+// Mirsaneli add
+void LocationSetLights(ref loc)
+{
+	SendMessage(loc, "ls", MSG_LOCATION_EX_MSG, "DelAllLights");
+
+	string lightPath,lightName,lightGroupName;
+	string sat;
+	aref st,at,lit,lit1;
+	int i,num, lnum,j;
+
+	if(Whr_IsLight() == 0)
+	{
+		lightPath = "models.day.lights";
+	}else{
+		lightPath = "models.night.lights";
+	}
+
+	if(CheckAttribute(loc, lightPath) != 0)
+	{
+		makearef(st, loc.(lightPath));
+		num = GetAttributesNum(st);
+		//Trace("numLights = " + num);
+		for(i = 0; i < num; i++)
+		{
+			at = GetAttributeN(st, i);
+			lightGroupName = GetAttributeName(at);
+			sat = lightPath + "." + lightGroupName;
+			lightName = loc.(sat);
+			sat = "locators." + lightGroupName;
+			if(CheckAttribute(loc, sat) != 0)
+			{
+				makearef(lit, loc.(sat));
+				lnum = GetAttributesNum(lit);
+				for(j = 0; j < lnum; j++)
+				{
+					lit1 = GetAttributeN(lit, j);
+					float litX = stf(lit1.x);
+					float litY = stf(lit1.y);
+					float litZ = stf(lit1.z);
+					//Trace("     AddLight: " + lightName + " (" + litX + ", " + litY + ", " + litZ);
+					SendMessage(loc, "lsfff", MSG_LOCATION_ADD_LIGHT, lightName, litX, litY, litZ);
+					if(lightName == "lamp")
+					{
+						SendMessage(loc, "lsfff", MSG_LOCATION_EX_MSG, "AddFlys", litX, litY, litZ);
+					}
+				}
+			}
+		}
+	}
 }

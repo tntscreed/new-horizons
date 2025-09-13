@@ -90,6 +90,7 @@ bool VISIT_DECK = true;
 	// 1: When anchoring, you go to your ship's deck. From there you can go to shore in the same way as in the tutorial.
 	//    When leaving land you'll also go to your ship's deck, unless you select 'Sea' command.
 
+bool FORCE_TRADE_WINDS = false;		// Mirsaneli add
 
 // ======================================
 // CANNONS

@@ -476,6 +476,13 @@ void Main_Start()
 	ReloadProgressUpdate();
 
 	CheckStorylines(); // KK
+	
+	 // Mirsaneli add
+	 pchar = GetMainCharacter();
+    if(USE_NEW_WEATHER) {
+        InterfaceStates.SeaDetails = 1.0;
+        WeatherInit();
+    }
 
 	InterfaceStates.Buttons.Load.enable = true;
 

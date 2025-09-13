@@ -2557,3 +2557,13 @@ string f2s2(float num)
 	temp.data = num;
 	return temp.data;
 }
+
+// Mirsaneli add
+void Log_TestInfo(string logtext)
+{
+	if (true) //bBettaTestMode)
+	{
+		Log_SetStringToLog(logtext);
+		//trace("TestInfo: " + GetQuestBookDataDigit() + " " + logtext)
+	}
+}

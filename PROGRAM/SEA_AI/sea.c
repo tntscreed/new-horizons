@@ -173,11 +173,19 @@ void CreateSeaEnvironment()
 
 	LayerFreeze(REALIZE, true);
 	LayerFreeze(EXECUTE, true);
+	//LayerCreate("sea_reflection", 1);							  
 	LayerFreeze(SEA_REFLECTION, false);
+	//LayerCreate("sea_reflection2", 1);			// this layer enabled for sea and disabled for abordage																						 
+	LayerFreeze("sea_reflection2", false);								   
 
 	InterfaceStates.Buttons.Resume.enable = true;
 
 	bSeaActive = true;
+	// Mirsaneli: disabled for now
+	//LayerCreate(SEA_REALIZE, 1);
+	// LayerSetRealize(SEA_REALIZE, 1);
+	//LayerCreate(SEA_EXECUTE, 1);
+	//LayerSetExecute(SEA_EXECUTE, 1);					 
 
 	LayerFreeze(SEA_EXECUTE, false);
 	LayerFreeze(SEA_REALIZE, false);
@@ -381,7 +389,7 @@ void Sea_MapEndFade()
 
 	// PB: Update Changed Flag -->
 //	int cc, compIdx;
-	ref PChar = GetMainCharacter();
+	PChar = GetMainCharacter();
 	if(CheckAttribute(PChar, "orgnation"))	// checks if you just hoisted Jolly Roger
 	{
 		HoistFlag(sti(PChar.orgnation));
@@ -458,7 +466,7 @@ void Land_MapLoad()
 void Land_MapStartFade()
 {
 	DelEventHandler("FaderEvent_StartFade", "Land_MapStartFade");
-	ref PChar = GetMainCharacter();
+	PChar = GetMainCharacter();
 	if(CheckAttribute(PChar,"location") && PChar.location!="" && FindLocation(PChar.location)!=-1)
 	{
 		UnloadLocation(&locations[FindLocation(PChar.location)]);
@@ -605,7 +613,7 @@ void SeaLogin(ref Login)
 	// create all sea modules
 	CreateSeaEnvironment();
 
-	Sea.MaxSeaHeight = 50.0;
+	Sea.MaxSeaHeight = 200.0;
 
 	ReloadProgressUpdate();
 
@@ -617,8 +625,9 @@ void SeaLogin(ref Login)
 		trace("SEA: sealogin loading island " + sIslandID);
 		CreateEntity(&Island, "Island");
 		Island.LightingPath = GetLightingPath();
-		Island.FogDensity = Weathers.Fog.IslandDensity;
-
+		Island.FogDensity = Weather.Fog.IslandDensity;
+		Island.ImmersionDistance = 450000.0;
+		Island.ImmersionDepth = 0.0;				  
 		if (GetTargetPlatform() != "xbox")
 		{
 			//CreateEntity(&SeaLighter, "lighter"); // PB: Enable Loc Lighter at sea with this
@@ -635,15 +644,20 @@ void SeaLogin(ref Login)
 		string sReflModel = Islands[iIslandIndex].filespath.models + "\" + Islands[iIslandIndex].refl_model;
 		SendMessage(&IslandReflModel, "ls", MSG_MODEL_SET_LIGHT_PATH, GetLightingPath());
 		SendMessage(&IslandReflModel, "ls", MSG_MODEL_LOAD_GEO, sReflModel);
+		SendMessage(&IslandReflModel, "lllf", MSG_MODEL_SET_FOG, 1, 1, stf(Weather.Fog.IslandDensity));																						 
 		LayerAddObject(SEA_REFLECTION, &IslandReflModel, -1);
 		SendMessage(SeaLighter, "ssi", "AddModel", Islands[iIslandIndex].refl_model, &IslandReflModel);
 
 		bIslandLoaded = true;
 
 		SendMessage(&SeaLocatorShow, "a", &Islands[iIslandIndex]);
+		CreateCoastFoamEnvironment(sIslandID, SEA_EXECUTE, SEA_REALIZE);														  
 		Fort_Login(iIslandIndex);
 
-		if(!bstorm) Sea.MaxSeaHeight = 3.0; // screwface : allow big waves around island in storm conditions
+		//if(!bstorm) Sea.MaxSeaHeight = 3.0; // screwface : allow big waves around island in storm conditions
+		if(!bstorm) Sea.MaxSeaHeight = 12.0; // mirsaneli: small waves around islands in normal conditions
+		if (bWeatherIsStorm) {Sea.MaxSeaHeight = 30.0; Sea.Sea2.Transparency = 0;}	// mirsaneli: sets the transparency to 0 when storm is active (fixes transparent water near towns/beaches during storms)
+		
 		// WM base coords for fleets 05-05-02 -->
 		// 05-05-03 get correct wdm name for island.
 		string wdmisland = wdmGetIslandNameFromID(sIslandID);
@@ -975,9 +989,9 @@ void SeaLogin(ref Login)
 	SetAllShipsNeutral();							ReloadProgressUpdate(); // PB: But set correct relations later in Sea_FirstInit
 	// Screwface : End
 
-	CreateEntity(&Seafoam,"Seafoam");				ReloadProgressUpdate();
-	LayerAddObject(SEA_EXECUTE, &Seafoam, -1);
-	LayerAddObject(SEA_REALIZE, &Seafoam, -1);
+	//CreateEntity(&Seafoam,"Seafoam");				ReloadProgressUpdate();
+	//LayerAddObject(SEA_EXECUTE, &Seafoam, -1);
+	//LayerAddObject(SEA_REALIZE, &Seafoam, -1);
 	DeleteAttribute(rPlayer, "scrollchars");				// PB: For Cheatmode
 	DeleteAttribute(rPlayer, "Anchoring");					// PB: Just to make sure this is gone
 	DeleteAttribute(rPlayer, "ForceReload");				// PB: Just to make sure this is gone
@@ -994,11 +1008,13 @@ void SeaLogin(ref Login)
 		DeleteAttribute(rCharacter, "Ship.Tack");
 		// PB: To make sure this is gone <--
 	}
+   /*
 	if (Whr_IsStorm())
 	{
 		Seafoam.storm = "true";
 		rPlayer.Capsize.Warning = ROLL_ANGLE_WARNING;		// PB: Reset capsize danger
 	}
+	*/
 	InitOpenSeaMod();										// stljeffbb Jan 15 2012
 	trace("Seafoam done");
 
@@ -1332,7 +1348,16 @@ void Sea_FirstInit()
 	// KK: Companion Mutiny <--
 
 	ResetTimeToNormal(); // PB: Reset Time Scale
-
+	if(!IsEntity(&Seafoam)) {
+        CreateEntity(&Seafoam,"Seafoam");//				ReloadProgressUpdate();
+        LayerAddObject(SEA_EXECUTE, &Seafoam, -1);
+        LayerAddObject(SEA_REALIZE, &Seafoam, -1);
+	}
+	if (Whr_IsStorm())
+	{
+		Seafoam.storm = "true";
+		rPlayer.Capsize.Warning = ROLL_ANGLE_WARNING;		// PB: Reset capsize danger
+	}													
 	trace("Sea_FirstInit done");
 }
 
@@ -1785,9 +1810,13 @@ float GetVisibilityRange(int iRange)
 		break;
 		// default:
 			visibility_range = 3000.0;
-			
+
 	}
-	visibility_range -= (stf(Weathers.Fog.SeaDensity) * 130 * visibility_range);
+	//Boyer add
+    if(USE_NEW_WEATHER)
+        visibility_range -= (stf(Weather.Fog.SeaDensity) * 130 * visibility_range);
+    else
+        visibility_range -= (stf(Weather.Fog.SeaDensity) * 130 * visibility_range);
 	if (Whr_IsNight()) visibility_range /= 2.0;
 	return visibility_range;
 }
@@ -1818,4 +1847,73 @@ void SetCorrectWorldMapPosition()
 		worldMap.playerShipX = (psX/WDM_MAP_TO_SEA_SCALE) + ix;
 		worldMap.playerShipZ = (psZ/WDM_MAP_TO_SEA_SCALE) + iz;
 	}
+}
+
+// Mirsaneli add
+float SetMaxSeaHeight(int islandIdx)
+{
+	if (!bSeaActive) return   7.0; // ситуция когда нет моря, нет координат pchar.Ship.Pos.x
+	if (bStorm) return 200.0;
+	string sIslandID = Islands[islandIdx].id;
+
+	float  fMaxViewDist;
+    int    i, iQty;
+	
+	if (CheckAttribute(Islands[islandIdx], "MaxSeaHeight")) return stf(Islands[islandIdx].MaxSeaHeight);
+
+	// поиск мин расстояния до городов по фортам -->
+    //fMaxViewDist = 2000; // послужит временно дистанцией
+	
+	aref arReloadLoc, arLocator;	
+	makearef(arReloadLoc, Islands[islandIdx].reload);
+	string  sLabel;
+	iQty = GetAttributesNum(arReloadLoc); 
+    //Log_TestInfo("Sea.MaxSeaHeight " + Sea.MaxSeaHeight);
+	for (i=0; i<iQty; i++)
+	{
+		arLocator = GetAttributeN(arReloadLoc, i);
+		sLabel = arLocator.label;
+
+		//расстояние до бухт и маяков
+		if (findsubstr(sLabel, "Shore" , 0) != -1 || findsubstr(sLabel, "Mayak" , 0) != -1)
+		{
+			if (CheckAttribute(pchar, "Ship.Pos.x") && CheckAttribute(arLocator, "x"))  // fix кривых локаторов у острова, правка должна быть в модели to_do
+			{
+				if (GetDistance2D(stf(pchar.Ship.Pos.x), stf(pchar.Ship.Pos.z), stf(arLocator.x), stf(arLocator.z)) < 1500)
+					return 7.0;
+			}
+			else
+			{
+				trace("Error: проблема определения SetMaxSeaHeight для " + sLabel);
+			}
+		}
+		//расстояние до форта
+		if (findsubstr(sLabel, "Fort" , 0) != -1)  
+		{
+			if (CheckAttribute(pchar, "Ship.Pos.x") && CheckAttribute(arLocator, "x"))  // fix кривых локаторов у острова, правка должна быть в модели to_do
+			{
+				if (GetDistance2D(stf(pchar.Ship.Pos.x), stf(pchar.Ship.Pos.z), stf(arLocator.x), stf(arLocator.z)) < 1700)
+					return 8.0;
+			}
+			else
+			{
+				trace("Error: проблема определения SetMaxSeaHeight для " + sLabel);
+			}				
+		}
+		//расстояние до порта
+		if (findsubstr(sLabel, "Port" , 0) != -1)
+		{
+			if (CheckAttribute(pchar, "Ship.Pos.x") && CheckAttribute(arLocator, "x"))  // fix кривых локаторов у острова, правка должна быть в модели to_do
+			{
+				if (GetDistance2D(stf(pchar.Ship.Pos.x), stf(pchar.Ship.Pos.z), stf(arLocator.x), stf(arLocator.z)) < 2000)
+					return 7.0;
+			}
+			else
+			{
+				trace("Error: проблема определения SetMaxSeaHeight для " + sLabel);
+			}
+		}
+	}
+    //Log_TestInfo("Sea.MaxSeaHeight Max 200");
+	return 200.0;
 }

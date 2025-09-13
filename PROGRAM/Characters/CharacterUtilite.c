@@ -4729,3 +4729,26 @@ void SetCharacterNation(ref ch, int nation) {
 	ch.nation = nation;
 	Ship_FlagRefresh(ch);
 }
+
+// Mirsaneli add
+int GetQuestPastMinutesParam(string _quest)
+{
+    aref  arQ;
+    makearef(arQ, PChar.(_quest));
+    if (CheckAttribute(PChar, _quest + ".control_year"))
+    {
+    	return GetPastTime("minute", sti(arQ.control_year), sti(arQ.control_month), sti(arQ.control_day), stf(arQ.control_time), GetDataYear(), GetDataMonth(), GetDataDay(), GetTime());
+	}
+	return 0;
+}
+
+void SaveCurrentQuestDateParam(string _quest)
+{
+    aref  arQ;
+    makearef(arQ, PChar.(_quest));
+
+    arQ.control_day = GetDataDay();
+    arQ.control_month = GetDataMonth();
+    arQ.control_year = GetDataYear();
+    arQ.control_time = GetTime();
+}
