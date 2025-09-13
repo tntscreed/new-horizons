@@ -389,7 +389,7 @@ void Sea_MapEndFade()
 
 	// PB: Update Changed Flag -->
 //	int cc, compIdx;
-	PChar = GetMainCharacter();
+	ref PChar = GetMainCharacter();
 	if(CheckAttribute(PChar, "orgnation"))	// checks if you just hoisted Jolly Roger
 	{
 		HoistFlag(sti(PChar.orgnation));
@@ -466,7 +466,7 @@ void Land_MapLoad()
 void Land_MapStartFade()
 {
 	DelEventHandler("FaderEvent_StartFade", "Land_MapStartFade");
-	PChar = GetMainCharacter();
+	ref PChar = GetMainCharacter();
 	if(CheckAttribute(PChar,"location") && PChar.location!="" && FindLocation(PChar.location)!=-1)
 	{
 		UnloadLocation(&locations[FindLocation(PChar.location)]);
@@ -1869,6 +1869,9 @@ float SetMaxSeaHeight(int islandIdx)
 	string  sLabel;
 	iQty = GetAttributesNum(arReloadLoc); 
     //Log_TestInfo("Sea.MaxSeaHeight " + Sea.MaxSeaHeight);
+
+	ref pchar = GetMainCharacter();
+
 	for (i=0; i<iQty; i++)
 	{
 		arLocator = GetAttributeN(arReloadLoc, i);

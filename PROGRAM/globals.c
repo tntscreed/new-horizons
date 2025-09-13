@@ -25,8 +25,6 @@ float FRAND(float _x) { return rand(32768) / 32768.0 * _x; }
 int TimeScaleCounter = 0;
 float frandSmall(float _x) { return rand(32) / 32.0 * _x; } // boal
 
-ref pchar;
-
 int MaxVertices = 32000;//32000;//16000;//8000;//4000
 int MaxIndices = 33200;//33200;//17200;//9200;//5200
 float GridStepX = 0.1;

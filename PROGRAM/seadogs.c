@@ -478,7 +478,7 @@ void Main_Start()
 	CheckStorylines(); // KK
 	
 	 // Mirsaneli add
-	 pchar = GetMainCharacter();
+	ref pchar = GetMainCharacter();
     if(USE_NEW_WEATHER) {
         InterfaceStates.SeaDetails = 1.0;
         WeatherInit();

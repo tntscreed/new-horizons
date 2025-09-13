@@ -4733,6 +4733,7 @@ void SetCharacterNation(ref ch, int nation) {
 // Mirsaneli add
 int GetQuestPastMinutesParam(string _quest)
 {
+	ref PChar = GetMainCharacter();
     aref  arQ;
     makearef(arQ, PChar.(_quest));
     if (CheckAttribute(PChar, _quest + ".control_year"))
@@ -4744,6 +4745,7 @@ int GetQuestPastMinutesParam(string _quest)
 
 void SaveCurrentQuestDateParam(string _quest)
 {
+	ref PChar = GetMainCharacter();
     aref  arQ;
     makearef(arQ, PChar.(_quest));
 

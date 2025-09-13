@@ -5,7 +5,7 @@
 int curWindow;
 int pirateflagidx, pirateflagtex, personalflagidx, personalflagtex, tmppirateflagidx, tmppirateflagtex, tmppersonalflagidx, tmppersonalflagtex;
 bool hasShip = false;
-// ref PChar;
+ref PChar;
 
 void InitInterface(string iniName)
 {
