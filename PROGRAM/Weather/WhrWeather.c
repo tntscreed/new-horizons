@@ -279,7 +279,7 @@ aref GetTempWeatherObj()
 
 void CreateWeatherEnvironment()
 {
-    pchar = GetMainCharacter();
+    ref pchar = GetMainCharacter();
     DeleteAttribute(&Weather,"");
 
 	string sAttrName;
