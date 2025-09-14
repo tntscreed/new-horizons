@@ -1181,7 +1181,7 @@ void Whr_UpdateWeatherHour() // Mirsaneli: rewritten Whr_UpdateWeatherHour for F
         bool isSeaEnt = IsEntity(&Sea);
 
         Whr_WindChange();
-
+		ref pchar = GetMainCharacter();
         int islandIdx = FindIsland(pchar.location);
         if (islandIdx != -1 && isSeaEnt)
         {
@@ -1647,6 +1647,8 @@ void Whr_WindChange()
     float oldAngle = fWeatherAngle; // the last known angle (in radians)
     float delta = (frand(PI / 2.0)) - (PI / 4.0); // random delta between -45° and +45°
     float newAngle = oldAngle + delta;
+
+	ref pchar = GetMainCharacter();
 
     // Wrap the angle between 0 and 2*PI
     if (newAngle < 0.0) newAngle += PIm2;
