@@ -23,7 +23,7 @@ void WhrCreateSkyEnvironment()
 	aref aSky;
 	makearef(aSky, aCurWeather.Sky);
 
-	DeleteAttribute(&Sky, "")
+	DeleteAttribute(&Sky, "");
 	if(!isEntity(&Sky))
 	{
 		CreateEntity(&Sky, "Sky");
