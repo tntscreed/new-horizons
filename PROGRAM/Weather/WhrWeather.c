@@ -349,9 +349,9 @@ void CreateWeatherEnvironment()
 			WeatherParams.Rain.ThisDay = false;
 		}
 	}
-//navy <-- Rain
+	//navy <-- Rain
 
-if (iNextWeatherNum != -1)
+	if (iNextWeatherNum != -1)
 	{
 		if (iPrevWeather == -1) { iPrevWeather = iCurWeatherNum; }
 		iCurWeatherHour = iHour;
